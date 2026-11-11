@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lee y subraya · Memoria RAM</title>
+<style>
+:root{font-family:'Segoe UI',Arial,sans-serif;color:#183142;background:#eef5f7}*{box-sizing:border-box}body{margin:0}main{max-width:1000px;margin:auto;padding:30px 20px}header{background:#123b46;color:white;padding:30px;border-radius:22px}small{letter-spacing:.12em;color:#8de8d0}h1{font-size:clamp(2rem,5vw,3rem);margin:12px 0}header p{line-height:1.7;margin-bottom:0}.panel{background:white;border:1px solid #d6e3e8;border-radius:18px;margin-top:22px;padding:26px}h2{font-size:1.25rem;margin-top:0}.reading p{font-size:1.14rem;line-height:2.05;margin:0 0 18px}.word{font:inherit;line-height:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;border-radius:3px}.word:hover{background:#e2f6f0}.word:focus-visible{outline:2px solid #126c98;outline-offset:3px}.word.selected{text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:5px;background:#fff0a9}.word.correct{background:#d4f5dd;text-decoration-color:#16743b}.word.wrong{background:#ffe0df;text-decoration-style:wavy;text-decoration-color:#b32424}.bank{line-height:2;font-size:1.05rem}.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.action{border:0;border-radius:10px;background:#176b59;color:white;padding:13px 20px;font-weight:700;font-size:1rem;cursor:pointer}.secondary{background:#e9eff3;color:#183142}#count{margin-left:auto;font-weight:700}progress{width:100%;height:10px;accent-color:#177861;margin:18px 0}#result{line-height:1.7;margin:0}footer{font-style:italic;font-size:.85rem;line-height:1.7;margin:24px 0;color:#516773}.note{font-size:.9rem;color:#516773} @media(max-width:600px){main{padding:15px 12px}.panel,header{padding:20px}#count{margin-left:0}.reading p{font-size:1.05rem}}
+</style>
+</head>
+<body><main>
+<header><small>FUNDAMENTOS DE HARDWARE · ACTIVIDAD 01</small><h1>Lee y subraya: la RAM</h1><p>Lee el texto y localiza las 20 palabras de la lista. Pulsa sobre cada una para subrayarla. Si te equivocas, vuelve a pulsar para quitar el subrayado. Después, comprueba tu trabajo.</p></header>
+<section class="panel reading" aria-label="Lectura sobre la RAM" id="reading"></section>
+<section class="panel"><h2>Localiza estas 20 palabras</h2><p class="bank" id="bank"></p><p class="note">Subraya una aparición de cada palabra. Con el teclado, usa Tab para avanzar y Espacio o Intro para seleccionar.</p></section>
+<section class="panel" aria-label="Corrección"><div class="controls"><button class="action" id="check">Comprobar</button><button class="action secondary" id="reset">Reiniciar</button><span id="count" aria-live="polite">0 de 20 seleccionadas</span></div><progress id="progress" max="20" value="0" aria-label="Palabras seleccionadas"></progress><p id="result" role="status">Cuando termines, pulsa «Comprobar».</p></section>
+<footer>IES María de Zayas de Sotomayor · Prof. Jaime Pérez Egas<br>Actividad de práctica. Los resultados no se envían ni se guardan al cerrar o recargar la página.</footer>
+<noscript>Activa JavaScript en tu navegador para realizar la actividad.</noscript>
+</main>
+<script>
+'use strict';
+// Edita estos dos bloques para crear otra lectura.
+const paragraphs = [
+'La RAM es la memoria de trabajo del ordenador. Guarda temporalmente los datos y las instrucciones que necesitan los programas en ejecución. El procesador accede a esa información para realizar operaciones. Por ejemplo, cuando abres un documento, parte de su contenido se carga en esta zona de trabajo para poder editarlo.',
+'Esta memoria es volátil: pierde su contenido cuando deja de recibir alimentación eléctrica. Por eso, antes de apagar el equipo debes guardar los cambios de tus documentos. El almacenamiento, como el SSD, conserva los archivos sin corriente. Trabajar sobre un texto y guardarlo son acciones diferentes: escribir no garantiza que los últimos cambios se hayan conservado.',
+'En muchos ordenadores, este componente se presenta en módulos que se insertan en las ranuras de la placa base. Cada módulo incorpora chips donde se mantiene la información. Sus contactos permiten la conexión eléctrica y una muesca ayuda a orientar la inserción. Nunca debes forzar una pieza que no encaja.',
+'La capacidad indica cuánta información puede mantenerse en esta zona de trabajo y suele expresarse en gigabytes. Por ejemplo, un equipo con 16 GB puede disponer de más espacio para aplicaciones abiertas que uno con 8 GB. Sin embargo, ampliar este componente no mejora por igual todas las tareas: el resultado depende del uso y del resto del equipo.',
+'La velocidad de transferencia indica el ritmo al que se pueden transferir los datos; se expresa habitualmente en MT/s, millones de transferencias por segundo. La latencia está relacionada con la espera necesaria para ciertas operaciones. Son características distintas: una cifra de transferencia mayor no significa que todos los tiempos de espera sean menores.',
+'Antes de ampliar el equipo debes comprobar la compatibilidad. DDR4 y DDR5 son generaciones diferentes y no se pueden intercambiar en una misma ranura. También debes revisar el formato, la cantidad máxima admitida y la configuración de canales. Utiliza el manual de la placa para elegir las posiciones recomendadas. Antes de instalar cualquier pieza, apaga y desconecta el ordenador de la corriente y aplica las precauciones contra descargas electrostáticas.'
+];
+const targets = ['RAM','datos','instrucciones','programas','procesador','volátil','almacenamiento','SSD','módulos','ranuras','chips','contactos','muesca','capacidad','gigabytes','velocidad','latencia','compatibilidad','generaciones','canales'];
+const normalize = value => value.toLocaleLowerCase('es');
+const targetSet = new Set(targets.map(normalize));
+const reading = document.getElementById('reading');
+const result = document.getElementById('result');
+const buttons = [];
+paragraphs.forEach((text,index) => {
+ const p = document.createElement('p');
+ p.append(document.createTextNode((index+1)+'. '));
+ const tokens = text.match(/[\p{L}\p{N}]+(?:\/\p{L}+)?|[^\p{L}\p{N}]+/gu) || [];
+ tokens.forEach(token => {
+  if (!/^[\p{L}\p{N}]/u.test(token)) { p.append(document.createTextNode(token)); return; }
+  const b=document.createElement('button'); b.type='button'; b.className='word'; b.textContent=token; b.dataset.word=normalize(token); b.setAttribute('aria-pressed','false');
+  b.addEventListener('click',()=>{
+   const selected=b.classList.contains('selected');
+   if(!selected && buttons.filter(x=>x.classList.contains('selected')).length>=20){result.textContent='Ya has seleccionado 20 palabras. Quita un subrayado antes de elegir otra.';return;}
+   b.classList.toggle('selected'); b.setAttribute('aria-pressed',String(!selected));
+   buttons.forEach(x=>x.classList.remove('correct','wrong')); update(); result.textContent='Selección actualizada. Pulsa «Comprobar» para revisarla.';
+  });
+  buttons.push(b);p.append(b);
+ });reading.append(p);
+});
+document.getElementById('bank').textContent=targets.join(' · ');
+function update(){const n=buttons.filter(b=>b.classList.contains('selected')).length;document.getElementById('count').textContent=n+' de 20 seleccionadas';document.getElementById('progress').value=n;}
+document.getElementById('check').addEventListener('click',()=>{
+ const seen=new Set();let errors=0;
+ buttons.forEach(b=>{b.classList.remove('correct','wrong');if(!b.classList.contains('selected'))return;
+ const valid=targetSet.has(b.dataset.word)&&!seen.has(b.dataset.word);
+ b.classList.add(valid?'correct':'wrong');if(valid)seen.add(b.dataset.word);else errors++;
+ });
+ const missing=targets.filter(t=>!seen.has(normalize(t)));
+ result.textContent=seen.size===20 && errors===0?'¡Excelente! Has localizado y subrayado las 20 palabras correctamente.':`Aciertos: ${seen.size}/20. Selecciones incorrectas o repetidas: ${errors}. Faltan: ${missing.length}. Verde = acierto; rojo ondulado = selección incorrecta o repetida. Revisa la lista y vuelve a intentarlo.`;
+});
+document.getElementById('reset').addEventListener('click',()=>{buttons.forEach(b=>{b.className='word';b.setAttribute('aria-pressed','false');});update();result.textContent='Actividad reiniciada. Lee y subraya las 20 palabras.';});
+</script></body></html>
